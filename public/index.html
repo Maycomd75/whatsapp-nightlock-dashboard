@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>Painel NightLock — Controle do Bot</title>
+
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script src="panel.js" defer></script>
+
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #0d1117;
+      color: #e6eef6;
+      padding: 20px;
+      max-width: 900px;
+      margin: auto;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 25px;
+      color: #93c5fd;
+    }
+
+    .card {
+      background: #161b22;
+      padding: 18px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 14px rgba(0,0,0,.6);
+      border: 1px solid #1e293b;
+    }
+
+    button {
+      padding: 10px 15px;
+      border: 0;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 15px;
+      margin-right: 8px;
+      font-weight: bold;
+    }
+
+    .green { background: #16a34a; color: white; }
+    .yellow { background: #f59e0b; color: white; }
+    .red { background: #ef4444; color: white; }
+
+    pre {
+      background: #0a0f18;
+      padding: 14px;
+      border-radius: 8px;
+      height: 350px;
+      overflow-y: auto;
+      color: #9fb7d4;
+      border: 1px solid #1e293b;
+      font-size: 14px;
+    }
+
+    #qrImg {
+      max-width: 260px;
+      background: white;
+      padding: 10px;
+      border-radius: 8px;
+      margin-top: 10px;
+    }
+
+    #statusText {
+      font-weight: bold;
+      color: #38bdf8;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>Painel NightLock — Controle Remoto</h1>
+
+  <!-- STATUS -->
+  <div class="card">
+    <h3>Status do Bridge/Bot:</h3>
+    <p id="statusText">🔄 Aguardando conexão...</p>
+
+    <button class="green" onclick="sendCmd('start')">Iniciar bot</button>
+    <button class="yellow" onclick="sendCmd('restart')">Reiniciar bot</button>
+    <button class="red" onclick="sendCmd('stop')">Parar bot</button>
+  </div>
+
+  <!-- QR -->
+  <div class="card">
+    <h3>QR Code (aparece quando precisa logar):</h3>
+    <div id="qrArea">Nenhum QR no momento.</div>
+  </div>
+
+  <!-- LOGS -->
+  <div class="card">
+    <h3>Logs do Bot (tempo real)</h3>
+    <pre id="logs">Aguardando logs...</pre>
+  </div>
+
+</body>
+</html>
