@@ -1,114 +1,113 @@
-// bridge.js — roda local, NÃO modifica o bot
-// Requisitos: node, pm2 instalado (já que seu bot usa pm2)
-// npm i socket.io-client pm2
-
+// bridge.js — roda local com PM2
 const io = require("socket.io-client");
 const pm2 = require("pm2");
-const os = require("os");
 
 if (!process.env.RENDER_WS_URL) {
-  console.error("Defina RENDER_WS_URL (ex: https://seu-painel.onrender.com)");
+  console.error("❌ Defina RENDER_WS_URL exemplo:");
+  console.error("SET RENDER_WS_URL=https://whatsapp-nightlock-dashboard.onrender.com/");
   process.exit(1);
 }
-const RENDER_WS_URL = process.env.RENDER_WS_URL; // exemplo: https://seu-painel.onrender.com
 
-const socket = io(RENDER_WS_URL, { reconnectionDelayMax: 5000 });
+const RENDER_WS_URL = process.env.RENDER_WS_URL;
+const BOT_PM2_NAME = process.env.BOT_PM2_NAME || "whatsapp-nightlock";
 
-let BOT_PM2_NAME = process.env.BOT_PM2_NAME || 'whatsapp-nightlock'; // ajuste se seu PM2 usa outro nome
+const socket = io(RENDER_WS_URL, {
+  reconnection: true,
+  reconnectionDelayMax: 5000,
+  transports: ["websocket"]
+});
 
-socket.on('connect', () => {
-  console.log('➤ Bridge conectado ao painel (Render)');
+// ==============================
+// Conectou ao painel
+// ==============================
+socket.on("connect", () => {
+  console.log("🟢 Bridge conectado ao painel Render");
   sendStatus();
 });
 
-// recebe comandos do painel e aplica localmente (via pm2)
-socket.on('command', async (cmd) => {
-  console.log('Comando recebido do painel:', cmd);
-  if (cmd === 'restart') {
-    pm2.connect(() => {
-      pm2.restart(BOT_PM2_NAME, (err) => {
-        if (err) console.error('Erro ao restart pm2', err);
-        else console.log('Bot reiniciado via bridge.');
-        pm2.disconnect();
-      });
-    });
-  } else if (cmd === 'stop') {
-    pm2.connect(() => {
-      pm2.stop(BOT_PM2_NAME, () => { pm2.disconnect(); });
-    });
-  } else if (cmd === 'start') {
-    pm2.connect(() => {
-      pm2.start(BOT_PM2_NAME, () => { pm2.disconnect(); });
-    });
-  }
+// ==============================
+// Painel → Server → Bridge
+// ==============================
+socket.on("command", (cmd) => {
+  console.log("⚙ Comando recebido:", cmd);
+
+  pm2.connect(() => {
+    if (cmd === "restart") {
+      pm2.restart(BOT_PM2_NAME, () => pm2.disconnect());
+    } else if (cmd === "stop") {
+      pm2.stop(BOT_PM2_NAME, () => pm2.disconnect());
+    } else if (cmd === "start") {
+      pm2.start(BOT_PM2_NAME, () => pm2.disconnect());
+    }
+  });
 });
 
-// envia status com info do PM2
-async function sendStatus() {
+// ==============================
+// Função para enviar status
+// ==============================
+function sendStatus() {
   pm2.connect((err) => {
     if (err) {
-      console.error('pm2 connect err', err);
-      socket.emit('bridge:status', { connected: false });
+      socket.emit("bridge:status", { connected: false });
       return;
     }
+
     pm2.list((err, list) => {
       if (err) {
-        socket.emit('bridge:status', { connected: false });
+        socket.emit("bridge:status", { connected: false });
         pm2.disconnect();
         return;
       }
+
       const bot = list.find(p => p.name === BOT_PM2_NAME);
+
       if (!bot) {
-        socket.emit('bridge:status', { connected: false });
+        socket.emit("bridge:status", { connected: false });
         pm2.disconnect();
         return;
       }
+
       const st = {
-        connected: bot.pm2_env.status === 'online',
+        connected: bot.pm2_env.status === "online",
+        status: bot.pm2_env.status,
         cpu: bot.monit?.cpu || 0,
-        memory: bot.monit?.memory ? (bot.monit.memory/1024/1024).toFixed(2) : null,
-        uptime: bot.pm2_env.pm_uptime,
-        status: bot.pm2_env.status
+        memory: bot.monit?.memory ? (bot.monit.memory / 1024 / 1024).toFixed(2) : "0",
+        uptime: bot.pm2_env.pm_uptime
       };
-      socket.emit('bridge:status', st);
+
+      socket.emit("bridge:status", st);
       pm2.disconnect();
     });
   });
 }
 
-// envia periodicamente status
-setInterval(sendStatus, 15_000);
+// envia status a cada 15s
+setInterval(sendStatus, 15000);
 
-// conecta ao pm2 bus para enviar logs em tempo real
+// ==============================
+// Logs e QR code
+// ==============================
 pm2.connect((err) => {
-  if (err) {
-    console.error('Erro pm2.connect', err);
-    return;
-  }
-  pm2.launchBus((err, bus) => {
-    if (err) return console.error(err);
-    console.log('Bridge escutando logs do PM2...');
-    bus.on('log:out', (packet) => {
-      // packet.data contém a linha de stdout
-      const line = `${packet.process.name}: ${packet.data}`;
-      socket.emit('bridge:log', line);
+  if (err) return console.error("Erro conectando no PM2:", err);
 
-      // Detect QR raw if bot prints a special prefix 'BRIDGE_QR:'
-      if (typeof packet.data === 'string' && packet.data.includes('BRIDGE_QR:')) {
-        const idx = packet.data.indexOf('BRIDGE_QR:');
-        const qr = packet.data.slice(idx + 'BRIDGE_QR:'.length).trim();
-        // se qr for uma url (startsWith 'http' or 'data:image'), set isRaw true
-        const isRaw = true;
-        socket.emit('bridge:qr', { qr, isRaw });
+  pm2.launchBus((err, bus) => {
+    if (err) return console.error("Erro PM2 bus:", err);
+
+    console.log("📡 Escutando logs do PM2...");
+
+    bus.on("log:out", (packet) => {
+      socket.emit("bridge:log", `${packet.process.name}: ${packet.data}`);
+
+      if (String(packet.data).includes("BRIDGE_QR:")) {
+        const qr = packet.data.split("BRIDGE_QR:")[1].trim();
+        socket.emit("bridge:qr", { qr, isRaw: true });
       }
     });
 
-    bus.on('log:err', (packet) => {
-      const line = `${packet.process.name} ERR: ${packet.data}`;
-      socket.emit('bridge:log', line);
+    bus.on("log:err", (packet) => {
+      socket.emit("bridge:log", `${packet.process.name} ERR: ${packet.data}`);
     });
 
-    // opcional: reemit process events
-    bus.on('process:event', () => sendStatus());
+    bus.on("process:event", () => sendStatus());
   });
 });
