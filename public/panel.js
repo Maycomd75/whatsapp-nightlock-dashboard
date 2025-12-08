@@ -13,9 +13,15 @@ const qrArea = document.getElementById("qrArea");
 
 // Enviar comando ao bridge.js → pm2 → bot
 function sendCmd(cmd) {
-  // correto: o painel envia panel:command
   socket.emit("panel:command", cmd);
-  logsArea.textContent += `\n[PAINEL] Enviado comando: ${cmd}`;
+
+  // Garante quebra de linha correta
+  if (logsArea.textContent.trim() === "Aguardando logs...") {
+    logsArea.textContent = "";
+  }
+
+  logsArea.textContent += `[PAINEL] Enviado comando: ${cmd}\n`;
+  logsArea.scrollTop = logsArea.scrollHeight;
 }
 
 // Quando o painel conecta no Render
@@ -39,9 +45,22 @@ socket.on("status", (st) => {
   statusText.style.color = "#4ade80";
 });
 
-// Logs em tempo real
+// =====================================
+// 🔥 Logs em tempo real (corrigido)
+// =====================================
 socket.on("log", (line) => {
-  logsArea.textContent += `\n${line}`;
+
+  // Caso o painel ainda esteja com texto inicial
+  if (logsArea.textContent.trim() === "Aguardando logs...") {
+    logsArea.textContent = "";
+  }
+
+  // Garante formatação correta
+  if (!line || typeof line !== "string") return;
+
+  logsArea.textContent += line + "\n";
+
+  // Auto scroll
   logsArea.scrollTop = logsArea.scrollHeight;
 });
 
