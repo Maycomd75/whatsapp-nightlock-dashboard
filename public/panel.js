@@ -1,4 +1,4 @@
-// ============ panel.js CORRIGIDO ============
+// ============ panel.js ============
 
 // Usa a URL da própria página (Render)
 const WS_URL = window.location.origin;
@@ -13,7 +13,8 @@ const qrArea = document.getElementById("qrArea");
 
 // Enviar comando ao bridge.js → pm2 → bot
 function sendCmd(cmd) {
-  socket.emit("panel:command", cmd);   // <<< CORREÇÃO AQUI
+  // correto: o painel envia panel:command
+  socket.emit("panel:command", cmd);
   logsArea.textContent += `\n[PAINEL] Enviado comando: ${cmd}`;
 }
 
@@ -22,8 +23,8 @@ socket.on("connect", () => {
   console.log("Painel conectado ao servidor Render.");
 });
 
-// Recebe status reenviado pelo server.js
-socket.on("status", (st) => {  // <<< CORREÇÃO AQUI
+// Recebe status reemitido pelo server.js
+socket.on("status", (st) => {
   if (!st || !st.connected) {
     statusText.textContent = "❌ OFFLINE — Bridge ou bot fora do ar";
     statusText.style.color = "#f87171";
@@ -39,13 +40,13 @@ socket.on("status", (st) => {  // <<< CORREÇÃO AQUI
 });
 
 // Logs em tempo real
-socket.on("log", (line) => {   // <<< CORREÇÃO AQUI
+socket.on("log", (line) => {
   logsArea.textContent += `\n${line}`;
   logsArea.scrollTop = logsArea.scrollHeight;
 });
 
-// QR reenviado pelo server.js
-socket.on("qr", ({ qr, isRaw }) => {   // <<< CORREÇÃO AQUI
+// QR enviado pelo bridge.js (repassado pelo server.js)
+socket.on("qr", ({ qr, isRaw }) => {
   if (!qr) {
     qrArea.innerHTML = "Nenhum QR no momento.";
     return;
