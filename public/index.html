@@ -12,7 +12,80 @@
 
   <style>
 
-/* Container centralizado */
+/* ======================= PADRÃO NIGHTLOCK ======================== */
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: #0d1117;
+    color: #e6eef6;
+    padding: 20px;
+    max-width: 950px;
+    margin: auto;
+}
+
+h1, h2, h3, h4 {
+    color: #93c5fd;
+    margin-bottom: 10px;
+    text-shadow: 0 0 8px #0ea5e9;
+}
+
+.card {
+    background: #161b22;
+    padding: 20px;
+    border-radius: 14px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 14px rgba(0,0,0,.6);
+    border: 1px solid #1e293b;
+}
+
+button {
+    padding: 10px 15px;
+    border: 0;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 15px;
+    margin-right: 8px;
+    font-weight: bold;
+    transition: 0.2s;
+}
+
+button:hover {
+    opacity: 0.82;
+    transform: scale(1.05);
+}
+
+.green { background: #16a34a; color: white; }
+.yellow { background: #f59e0b; color: white; }
+.red { background: #ef4444; color: white; }
+.blue { background: #0ea5e9; color: white; }
+
+pre {
+    background: #0a0f18;
+    padding: 14px;
+    border-radius: 8px;
+    height: 350px;
+    overflow-y: auto;
+    color: #9fb7d4;
+    border: 1px solid #1e293b;
+    font-size: 14px;
+}
+
+/* ▶ QR */
+#qrImg {
+    max-width: 260px;
+    background: white;
+    padding: 10px;
+    border-radius: 8px;
+    margin-top: 10px;
+}
+
+#statusText {
+    font-weight: bold;
+    color: #38bdf8;
+}
+
+/* ======================= HEADER NEON ======================== */
+
 .neon-center {
     display: flex;
     align-items: center;
@@ -21,16 +94,14 @@
     margin-top: 20px;
 }
 
-/* Ícone com tamanho padrão de sites (28px) */
 .logo-icon-neon {
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
     filter: drop-shadow(0 0 4px #00f0ff);
 }
 
-/* Texto neon */
 .neon-text {
-    font-size: 22px;
+    font-size: 26px;
     font-weight: 700;
     color: #00eaff;
     text-shadow:
@@ -39,75 +110,32 @@
         0 0 14px #00eaff;
 }
 
- 
-    body {
-      font-family: Arial, Helvetica, sans-serif;
-      background: #0d1117;
-      color: #e6eef6;
-      padding: 20px;
-      max-width: 900px;
-      margin: auto;
-    }
+/* ======================= LISTAS DE GRUPO ======================== */
 
-   h1 {
-      text-align: center;
-      margin-bottom: 25px;
-      color: #93c5fd;
-    }
+ul li {
+    background: #0a0f18;
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin-bottom: 6px;
+    border: 1px solid #1e293b;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
 
-    .card {
-      background: #161b22;
-      padding: 18px;
-      border-radius: 10px;
-      margin-bottom: 20px;
-      box-shadow: 0 4px 14px rgba(0,0,0,.6);
-      border: 1px solid #1e293b;
-    }
+.removeBtn {
+    background: #ef4444;
+    border: 0;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 12px;
+}
 
-    button {
-      padding: 10px 15px;
-      border: 0;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 15px;
-      margin-right: 8px;
-      font-weight: bold;
-    }
+/* ======================= TELA DE LOGIN ======================== */
 
-    .green { background: #16a34a; color: white; }
-    .yellow { background: #f59e0b; color: white; }
-    .red { background: #ef4444; color: white; }
-
-    pre {
-      background: #0a0f18;
-      padding: 14px;
-      border-radius: 8px;
-      height: 350px;
-      overflow-y: auto;
-      color: #9fb7d4;
-      border: 1px solid #1e293b;
-      font-size: 14px;
-    }
-
-    #qrImg {
-      max-width: 260px;
-      background: white;
-      padding: 10px;
-      border-radius: 8px;
-      margin-top: 10px;
-    }
-
-    #statusText {
-      font-weight: bold;
-      color: #38bdf8;
-    }
-  </style>
-</head>
-
-<body>
-
-<!-- 🔐 TELA DE LOGIN -->
-<div id="loginScreen" style="
+#loginScreen {
     position: fixed;
     top: 0; left: 0;
     width: 100%; height: 100%;
@@ -119,21 +147,55 @@
     color: #e6eef6;
     font-family: Arial;
     z-index: 9999;
-">
-    <img src="robot.png" width="100" style="filter: drop-shadow(0 0 8px #00eaff);">
+}
+
+.login-input {
+    padding: 12px;
+    margin-top: 20px;
+    width: 260px;
+    border-radius: 8px;
+    border: 1px solid #1e293b;
+    background: #161b22;
+    color: #e6eef6;
+    font-size: 16px;
+    outline: none;
+}
+
+.login-btn {
+    margin-top: 12px;
+    padding: 12px 20px;
+    border: 0;
+    background: #00b5ff;
+    color: white;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+  </style>
+</head>
+
+<body>
+
+<!-- ========================================================= -->
+<!-- 🔐 TELA DE LOGIN -->
+<!-- ========================================================= -->
+<div id="loginScreen">
+    <img src="robot.png" width="120" style="filter: drop-shadow(0 0 8px #00eaff);">
     <h2 style="margin-top: 10px; text-shadow: 0 0 8px #00eaff;">Painel NightLock</h2>
 
-    <input id="passwordInput" type="password" placeholder="Digite a senha"
-        style="padding: 12px; margin-top: 20px; width: 240px; border-radius: 8px; border: 1px solid #1e293b; background: #161b22; color: #e6eef6; font-size: 16px; outline: none;">
-
-    <button onclick="checkPassword()" style="margin-top: 12px; padding: 12px 20px; border: 0; background: #00b5ff; color: white; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer;">
-        Entrar
-    </button>
+    <input id="passwordInput" type="password" placeholder="Digite a senha" class="login-input">
+    <button class="login-btn" onclick="checkPassword()">Entrar</button>
 
     <p id="loginError" style="color: #ef4444; margin-top: 10px; display: none;">Senha incorreta.</p>
 </div>
 
-<!-- PAINEL REAL (fica oculto até logar) -->
+
+
+<!-- ========================================================= -->
+<!-- 🎛️ PAINEL PRINCIPAL -->
+<!-- ========================================================= -->
 <div id="realPanel" style="display: none;">
 
 <div class="header-logo neon-center">
@@ -142,33 +204,74 @@
 </div>
 
 
-  <!-- STATUS -->
-  <div class="card">
+<!-- STATUS DO BOT -->
+<div class="card">
     <h3>Status do Bridge/Bot:</h3>
     <p id="statusText">🔄 Aguardando conexão...</p>
 
     <button class="green" onclick="sendCmd('start')">Iniciar bot</button>
     <button class="yellow" onclick="sendCmd('restart')">Reiniciar bot</button>
     <button class="red" onclick="sendCmd('stop')">Parar bot</button>
-  </div>
+</div>
 
-  <!-- QR -->
-  <div class="card">
-    <h3>QR Code (aparece quando precisa logar):</h3>
+
+
+<!-- QR CODE -->
+<div class="card">
+    <h3>QR Code do WhatsApp:</h3>
     <div id="qrArea">Nenhum QR no momento.</div>
-  </div>
+</div>
 
-  <!-- LOGS -->
-  <div class="card">
+
+
+<!-- GERENCIAMENTO DE GRUPOS -->
+<div class="card">
+    <h3>Gerenciar Grupos</h3>
+
+    <button class="blue" onclick="requestGroupList()">🔄 Atualizar lista de grupos</button>
+
+    <div style="margin-top: 15px;">
+      <h4>Todos os grupos detectados:</h4>
+      <select id="groupSelector" style="width:100%; padding:10px; border-radius:8px; background:#0a0f18; color:#d1e3ff;">
+        <option value="">Carregando lista...</option>
+      </select>
+
+      <div style="margin-top: 10px;">
+        <button class="green" onclick="addAllowedGroup()">🟩 Permitir</button>
+        <button class="red" onclick="addBlockedGroup()">🟥 Bloquear</button>
+      </div>
+    </div>
+
+    <hr style="margin:20px 0; border-color:#334155;">
+
+    <div style="display:flex; gap:20px;">
+      <div style="flex:1;">
+        <h4>🟩 Grupos Permitidos</h4>
+        <ul id="allowedList"></ul>
+      </div>
+
+      <div style="flex:1;">
+        <h4>🟥 Grupos Bloqueados</h4>
+        <ul id="blockedList"></ul>
+      </div>
+    </div>
+</div>
+
+
+
+<!-- LOGS -->
+<div class="card">
     <h3>Logs do Bot (tempo real)</h3>
     <pre id="logs">Aguardando logs...</pre>
-  </div>
+</div>
 
-</div> <!-- fecha realPanel -->
+</div> <!-- REAL PANEL -->
+
+
 
 <script>
 function checkPassword() {
-    const senhaCorreta = "nightlock2025"; // 🔐 ALTERE AQUI SE QUISER
+    const senhaCorreta = "nightlock2025"; 
     const digitada = document.getElementById("passwordInput").value;
 
     if (digitada === senhaCorreta) {
@@ -179,7 +282,6 @@ function checkPassword() {
     }
 }
 
-// Entrar com Enter
 document.getElementById("passwordInput").addEventListener("keypress", (e) => {
     if (e.key === "Enter") checkPassword();
 });
