@@ -1,17 +1,16 @@
-// ============ panel.js (versão aprimorada) ============
+// ==================== panel.js (versão aprimorada) ====================
 
-// Detecta automaticamente a URL correta do servidor WebSocket
+// Detecta automaticamente o servidor WebSocket
 const WS_URL = window.location.origin;
-
-// Para debug
 console.log("Conectando ao servidor WebSocket:", WS_URL);
 
-// Conexão WebSocket com ajustes de estabilidade
+// Conexão com estabilidade aprimorada
 const socket = io(WS_URL, {
   reconnection: true,
   reconnectionAttempts: Infinity,
-  reconnectionDelay: 1500,
-  reconnectionDelayMax: 6000,
+  reconnectionDelay: 1200,
+  reconnectionDelayMax: 8000,
+  timeout: 10000,
 });
 
 // Seletores
@@ -19,64 +18,63 @@ const statusText = document.getElementById("statusText");
 const logsArea = document.getElementById("logs");
 const qrArea = document.getElementById("qrArea");
 
-// =====================================
-// 🔥 ENVIO DE COMANDOS DE PAINEL
-// =====================================
-let lastCmdTime = 0; // anti-spam básico
+// ------------------------------------
+// 🛰️ HEARTBEAT AUTOMÁTICO
+// ------------------------------------
+setInterval(() => {
+  if (socket.connected) {
+    socket.emit("panel:ping");
+  }
+}, 5000);
+
+// ------------------------------------
+// 🔥 ENVIO DE COMANDOS
+// ------------------------------------
+let lastCmdTime = 0;
 
 function sendCmd(cmd) {
   const now = Date.now();
-
-  // evita flood acidental
   if (now - lastCmdTime < 300) return;
   lastCmdTime = now;
 
+  printLog(`[PAINEL] Enviando comando: ${cmd}`);
   socket.emit("panel:command", cmd);
-
-  printLog(`[PAINEL] Enviado comando: ${cmd}`);
 }
 
-// Função utilitária para imprimir logs corretamente
+// Log no painel
 function printLog(line) {
   if (logsArea.textContent.trim() === "Aguardando logs...") {
     logsArea.textContent = "";
   }
-
   logsArea.textContent += line + "\n";
   logsArea.scrollTop = logsArea.scrollHeight;
 }
 
-// =====================================
-// 🔥 EVENTOS DO SOCKET.IO
-// =====================================
-
-// Conectado ao servidor Render / local
+// ------------------------------------
+// 🔌 EVENTOS SOCKET.IO
+// ------------------------------------
 socket.on("connect", () => {
-  console.log("Painel conectado via WebSocket.");
+  statusText.textContent = "🟢 Conectado ao servidor";
   statusText.style.color = "#4ade80";
 });
 
-// Perdeu conexão
-socket.on("disconnect", (reason) => {
+socket.on("disconnect", () => {
   statusText.textContent = "🔴 DESCONECTADO — Tentando reconectar...";
-  statusText.style.color = "#f87171";
-  console.warn("Desconectado:", reason);
+  statusText.style.color = "#ef4444";
 });
 
-// Em caso de falha de conexão
-socket.on("connect_error", (err) => {
-  console.error("Erro de conexão:", err.message);
-  statusText.textContent = "⚠️ Erro ao conectar ao servidor";
+socket.on("connect_error", () => {
+  statusText.textContent = "⚠️ Erro ao conectar — Retentando...";
   statusText.style.color = "#facc15";
 });
 
-// =====================================
-// 🔥 STATUS DO BOT / BRIDGE
-// =====================================
+// ------------------------------------
+// 🔥 STATUS DO BOT
+// ------------------------------------
 socket.on("status", (st) => {
   if (!st || !st.connected) {
-    statusText.textContent = "❌ OFFLINE — Bot ou bridge fora do ar";
-    statusText.style.color = "#f87171";
+    statusText.textContent = "❌ OFFLINE — Bridge/Bot não encontrado";
+    statusText.style.color = "#ef4444";
     return;
   }
 
@@ -85,34 +83,80 @@ socket.on("status", (st) => {
     Status: <b>${st.status}</b><br>
     CPU: <b>${st.cpu}%</b> • RAM: <b>${st.memory} MB</b>
   `;
-  statusText.style.color = "#4ade80";
 });
 
-// =====================================
+// ------------------------------------
 // 🔥 LOGS EM TEMPO REAL
-// =====================================
+// ------------------------------------
 socket.on("log", (line) => {
-  if (!line || typeof line !== "string") return;
+  if (!line) return;
   printLog(line);
 });
 
-// =====================================
-// 🔥 QR-CODE (raw image OR ascii)
-// =====================================
+// ------------------------------------
+// 🔥 QR-CODE
+// ------------------------------------
 socket.on("qr", ({ qr, isRaw }) => {
   if (!qr) {
-    qrArea.innerHTML = `<span style="color:#999;">Nenhum QR no momento</span>`;
+    qrArea.innerHTML = `<span style="color:#888;">Nenhum QR disponível</span>`;
     return;
   }
 
-  // QR como imagem base64
   if (isRaw) {
-    qrArea.innerHTML = `
-      <img id="qrImg" src="${qr}" style="width:200px;height:200px;image-rendering:pixelated;">
-    `;
+    qrArea.innerHTML = `<img id="qrImg" src="${qr}" style="width:220px; image-rendering:pixelated;">`;
     return;
   }
 
-  // QR em formato ASCII
   qrArea.innerHTML = `<pre>${qr}</pre>`;
 });
+
+// ------------------------------------
+// 🔥 GRUPOS
+// ------------------------------------
+const selector = document.getElementById("groupSelector");
+const allowedList = document.getElementById("allowedList");
+const blockedList = document.getElementById("blockedList");
+
+// Solicitar lista ao bridge
+function requestGroupList() {
+  selector.innerHTML = `<option>Carregando...</option>`;
+  sendCmd("list-groups");
+}
+
+// Receber todos os grupos
+socket.on("groups", (data) => {
+  if (!data) return;
+
+  // Preenche SELECT
+  selector.innerHTML = "";
+  data.all.forEach(g => {
+    const op = document.createElement("option");
+    op.value = g.id;
+    op.textContent = g.name;
+    selector.appendChild(op);
+  });
+
+  // Preenche permitidos
+  allowedList.innerHTML = "";
+  data.allowed.forEach(g => {
+    allowedList.innerHTML += `<li>${g.name}</li>`;
+  });
+
+  // Preenche bloqueados
+  blockedList.innerHTML = "";
+  data.blocked.forEach(g => {
+    blockedList.innerHTML += `<li>${g.name}</li>`;
+  });
+});
+
+function addAllowedGroup() {
+  const id = selector.value;
+  if (!id) return;
+  sendCmd(`allow:${id}`);
+}
+
+function addBlockedGroup() {
+  const id = selector.value;
+  if (!id) return;
+  sendCmd(`block:${id}`);
+}
