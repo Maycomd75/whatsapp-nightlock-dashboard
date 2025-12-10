@@ -1,38 +1,81 @@
-// ============ panel.js ============
+// ============ panel.js (versão aprimorada) ============
 
-// Usa a URL da própria página (Render)
+// Detecta automaticamente a URL correta do servidor WebSocket
 const WS_URL = window.location.origin;
 
-console.log("Conectando ao servidor:", WS_URL);
+// Para debug
+console.log("Conectando ao servidor WebSocket:", WS_URL);
 
-const socket = io(WS_URL, { reconnectionDelayMax: 5000 });
+// Conexão WebSocket com ajustes de estabilidade
+const socket = io(WS_URL, {
+  reconnection: true,
+  reconnectionAttempts: Infinity,
+  reconnectionDelay: 1500,
+  reconnectionDelayMax: 6000,
+});
 
+// Seletores
 const statusText = document.getElementById("statusText");
 const logsArea = document.getElementById("logs");
 const qrArea = document.getElementById("qrArea");
 
-// Enviar comando ao bridge.js → pm2 → bot
+// =====================================
+// 🔥 ENVIO DE COMANDOS DE PAINEL
+// =====================================
+let lastCmdTime = 0; // anti-spam básico
+
 function sendCmd(cmd) {
+  const now = Date.now();
+
+  // evita flood acidental
+  if (now - lastCmdTime < 300) return;
+  lastCmdTime = now;
+
   socket.emit("panel:command", cmd);
 
-  // Garante quebra de linha correta
+  printLog(`[PAINEL] Enviado comando: ${cmd}`);
+}
+
+// Função utilitária para imprimir logs corretamente
+function printLog(line) {
   if (logsArea.textContent.trim() === "Aguardando logs...") {
     logsArea.textContent = "";
   }
 
-  logsArea.textContent += `[PAINEL] Enviado comando: ${cmd}\n`;
+  logsArea.textContent += line + "\n";
   logsArea.scrollTop = logsArea.scrollHeight;
 }
 
-// Quando o painel conecta no Render
+// =====================================
+// 🔥 EVENTOS DO SOCKET.IO
+// =====================================
+
+// Conectado ao servidor Render / local
 socket.on("connect", () => {
-  console.log("Painel conectado ao servidor Render.");
+  console.log("Painel conectado via WebSocket.");
+  statusText.style.color = "#4ade80";
 });
 
-// Recebe status reemitido pelo server.js
+// Perdeu conexão
+socket.on("disconnect", (reason) => {
+  statusText.textContent = "🔴 DESCONECTADO — Tentando reconectar...";
+  statusText.style.color = "#f87171";
+  console.warn("Desconectado:", reason);
+});
+
+// Em caso de falha de conexão
+socket.on("connect_error", (err) => {
+  console.error("Erro de conexão:", err.message);
+  statusText.textContent = "⚠️ Erro ao conectar ao servidor";
+  statusText.style.color = "#facc15";
+});
+
+// =====================================
+// 🔥 STATUS DO BOT / BRIDGE
+// =====================================
 socket.on("status", (st) => {
   if (!st || !st.connected) {
-    statusText.textContent = "❌ OFFLINE — Bridge ou bot fora do ar";
+    statusText.textContent = "❌ OFFLINE — Bot ou bridge fora do ar";
     statusText.style.color = "#f87171";
     return;
   }
@@ -46,35 +89,30 @@ socket.on("status", (st) => {
 });
 
 // =====================================
-// 🔥 Logs em tempo real (corrigido)
+// 🔥 LOGS EM TEMPO REAL
 // =====================================
 socket.on("log", (line) => {
-
-  // Caso o painel ainda esteja com texto inicial
-  if (logsArea.textContent.trim() === "Aguardando logs...") {
-    logsArea.textContent = "";
-  }
-
-  // Garante formatação correta
   if (!line || typeof line !== "string") return;
-
-  logsArea.textContent += line + "\n";
-
-  // Auto scroll
-  logsArea.scrollTop = logsArea.scrollHeight;
+  printLog(line);
 });
 
-// QR enviado pelo bridge.js (repassado pelo server.js)
+// =====================================
+// 🔥 QR-CODE (raw image OR ascii)
+// =====================================
 socket.on("qr", ({ qr, isRaw }) => {
   if (!qr) {
-    qrArea.innerHTML = "Nenhum QR no momento.";
+    qrArea.innerHTML = `<span style="color:#999;">Nenhum QR no momento</span>`;
     return;
   }
 
+  // QR como imagem base64
   if (isRaw) {
-    qrArea.innerHTML = `<img id="qrImg" src="${qr}">`;
+    qrArea.innerHTML = `
+      <img id="qrImg" src="${qr}" style="width:200px;height:200px;image-rendering:pixelated;">
+    `;
     return;
   }
 
-  qrArea.textContent = qr;
+  // QR em formato ASCII
+  qrArea.innerHTML = `<pre>${qr}</pre>`;
 });
