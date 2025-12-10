@@ -4,14 +4,12 @@
   <meta charset="utf-8" />
   <title>Painel NightLock — Controle do Bot</title> 
   
-  <!-- Ícone personalizado -->
   <link rel="icon" type="image/png" href="favicon.png">
-  
+
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
   <script src="panel.js" defer></script>
 
   <style>
-
 /* ======================= PADRÃO NIGHTLOCK ======================== */
 
 body {
@@ -70,7 +68,6 @@ pre {
     font-size: 14px;
 }
 
-/* ▶ QR */
 #qrImg {
     max-width: 260px;
     background: white;
@@ -123,16 +120,6 @@ ul li {
     align-items: center;
 }
 
-.removeBtn {
-    background: #ef4444;
-    border: 0;
-    color: white;
-    padding: 4px 8px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 12px;
-}
-
 /* ======================= TELA DE LOGIN ======================== */
 
 #loginScreen {
@@ -145,7 +132,6 @@ ul li {
     align-items: center;
     justify-content: center;
     color: #e6eef6;
-    font-family: Arial;
     z-index: 9999;
 }
 
@@ -172,15 +158,12 @@ ul li {
     font-weight: bold;
     cursor: pointer;
 }
-
   </style>
 </head>
 
 <body>
 
-<!-- ========================================================= -->
-<!-- 🔐 TELA DE LOGIN -->
-<!-- ========================================================= -->
+<!-- LOGIN -->
 <div id="loginScreen">
     <img src="robot.png" width="120" style="filter: drop-shadow(0 0 8px #00eaff);">
     <h2 style="margin-top: 10px; text-shadow: 0 0 8px #00eaff;">Painel NightLock</h2>
@@ -192,19 +175,14 @@ ul li {
 </div>
 
 
-
-<!-- ========================================================= -->
-<!-- 🎛️ PAINEL PRINCIPAL -->
-<!-- ========================================================= -->
-<div id="realPanel" style="display: none;">
+<div id="realPanel" style="display:none;">
 
 <div class="header-logo neon-center">
     <img src="robot.png" alt="Logo" class="logo-icon-neon">
     <span class="neon-text">Painel NightLock — Controle Remoto</span>
 </div>
 
-
-<!-- STATUS DO BOT -->
+<!-- STATUS -->
 <div class="card">
     <h3>Status do Bridge/Bot:</h3>
     <p id="statusText">🔄 Aguardando conexão...</p>
@@ -214,17 +192,13 @@ ul li {
     <button class="red" onclick="sendCmd('stop')">Parar bot</button>
 </div>
 
-
-
 <!-- QR CODE -->
 <div class="card">
     <h3>QR Code do WhatsApp:</h3>
     <div id="qrArea">Nenhum QR no momento.</div>
 </div>
 
-
-
-<!-- GERENCIAMENTO DE GRUPOS -->
+<!-- GRUPOS -->
 <div class="card">
     <h3>Gerenciar Grupos</h3>
 
@@ -257,28 +231,34 @@ ul li {
     </div>
 </div>
 
-
-
 <!-- LOGS -->
 <div class="card">
     <h3>Logs do Bot (tempo real)</h3>
     <pre id="logs">Aguardando logs...</pre>
 </div>
 
-</div> <!-- REAL PANEL -->
-
-
+</div> <!-- /realPanel -->
 
 <script>
+let lock = false;
+
 function checkPassword() {
+    if (lock) return;
+    lock = true;
+
     const senhaCorreta = "nightlock2025"; 
     const digitada = document.getElementById("passwordInput").value;
+
+    setTimeout(() => { lock = false; }, 1000);
 
     if (digitada === senhaCorreta) {
         document.getElementById("loginScreen").style.display = "none";
         document.getElementById("realPanel").style.display = "block";
+
+        requestGroupList(); // carrega grupos automaticamente
     } else {
         document.getElementById("loginError").style.display = "block";
+        document.getElementById("passwordInput").value = "";
     }
 }
 
