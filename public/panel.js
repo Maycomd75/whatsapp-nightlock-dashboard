@@ -1,10 +1,10 @@
-// ==================== panel.js (versão aprimorada) ====================
+// ==================== panel.js (versão atualizada pelo ChatGPT) ====================
 
 // Detecta automaticamente o servidor WebSocket
 const WS_URL = window.location.origin;
 console.log("Conectando ao servidor WebSocket:", WS_URL);
 
-// Conexão com estabilidade aprimorada
+// Conexão WebSocket
 const socket = io(WS_URL, {
   reconnection: true,
   reconnectionAttempts: Infinity,
@@ -19,16 +19,14 @@ const logsArea = document.getElementById("logs");
 const qrArea = document.getElementById("qrArea");
 
 // ------------------------------------
-// 🛰️ HEARTBEAT AUTOMÁTICO
+// HEARTBEAT
 // ------------------------------------
 setInterval(() => {
-  if (socket.connected) {
-    socket.emit("panel:ping");
-  }
+  if (socket.connected) socket.emit("panel:ping");
 }, 5000);
 
 // ------------------------------------
-// 🔥 ENVIO DE COMANDOS
+// ENVIAR COMANDOS
 // ------------------------------------
 let lastCmdTime = 0;
 
@@ -41,7 +39,7 @@ function sendCmd(cmd) {
   socket.emit("panel:command", cmd);
 }
 
-// Log no painel
+// Logs
 function printLog(line) {
   if (logsArea.textContent.trim() === "Aguardando logs...") {
     logsArea.textContent = "";
@@ -51,7 +49,7 @@ function printLog(line) {
 }
 
 // ------------------------------------
-// 🔌 EVENTOS SOCKET.IO
+// EVENTOS SOCKET.IO
 // ------------------------------------
 socket.on("connect", () => {
   statusText.textContent = "🟢 Conectado ao servidor";
@@ -69,7 +67,7 @@ socket.on("connect_error", () => {
 });
 
 // ------------------------------------
-// 🔥 STATUS DO BOT
+// STATUS DO BOT
 // ------------------------------------
 socket.on("status", (st) => {
   if (!st || !st.connected) {
@@ -86,7 +84,7 @@ socket.on("status", (st) => {
 });
 
 // ------------------------------------
-// 🔥 LOGS EM TEMPO REAL
+// LOGS
 // ------------------------------------
 socket.on("log", (line) => {
   if (!line) return;
@@ -94,7 +92,7 @@ socket.on("log", (line) => {
 });
 
 // ------------------------------------
-// 🔥 QR-CODE
+// QR CODE
 // ------------------------------------
 socket.on("qr", ({ qr, isRaw }) => {
   if (!qr) {
@@ -111,23 +109,23 @@ socket.on("qr", ({ qr, isRaw }) => {
 });
 
 // ------------------------------------
-// 🔥 GRUPOS
+// GRUPOS (A PARTE QUE VOCÊ PEDIU)
 // ------------------------------------
 const selector = document.getElementById("groupSelector");
 const allowedList = document.getElementById("allowedList");
 const blockedList = document.getElementById("blockedList");
 
-// Solicitar lista ao bridge
+// solicitar a lista
 function requestGroupList() {
   selector.innerHTML = `<option>Carregando...</option>`;
   sendCmd("list-groups");
 }
 
-// Receber todos os grupos
+// receber listas do bridge
 socket.on("groups", (data) => {
   if (!data) return;
 
-  // Preenche SELECT
+  // preencher select
   selector.innerHTML = "";
   data.all.forEach(g => {
     const op = document.createElement("option");
@@ -136,19 +134,20 @@ socket.on("groups", (data) => {
     selector.appendChild(op);
   });
 
-  // Preenche permitidos
+  // preencher PERMITIDOS (grupos desbloqueados)
   allowedList.innerHTML = "";
   data.allowed.forEach(g => {
     allowedList.innerHTML += `<li>${g.name}</li>`;
   });
 
-  // Preenche bloqueados
+  // preencher BLOQUEADOS
   blockedList.innerHTML = "";
   data.blocked.forEach(g => {
     blockedList.innerHTML += `<li>${g.name}</li>`;
   });
 });
 
+// comandos
 function addAllowedGroup() {
   const id = selector.value;
   if (!id) return;
