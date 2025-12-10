@@ -198,38 +198,55 @@ ul li {
     <div id="qrArea">Nenhum QR no momento.</div>
 </div>
 
-<!-- GRUPOS -->
+<!-- ===================== GRUPOS ===================== -->
 <div class="card">
-    <h3>Gerenciar Grupos</h3>
+  <h3>Gerenciar Grupos</h3>
 
-    <button class="blue" onclick="requestGroupList()">🔄 Atualizar lista de grupos</button>
+  <button class="blue" onclick="requestGroupList()">🔄 Atualizar lista de grupos</button>
 
-    <div style="margin-top: 15px;">
-      <h4>Todos os grupos detectados:</h4>
-      <select id="groupSelector" style="width:100%; padding:10px; border-radius:8px; background:#0a0f18; color:#d1e3ff;">
-        <option value="">Carregando lista...</option>
-      </select>
+  <div style="margin-top: 15px;">
+    
+    <!-- TODOS OS GRUPOS -->
+    <h4>📋 Todos os grupos detectados:</h4>
+    <select id="groupSelector"
+      style="width:100%; padding:10px; border-radius:8px; background:#0a0f18; color:#d1e3ff;">
+      <option value="">Carregando lista...</option>
+    </select>
 
-      <div style="margin-top: 10px;">
-        <button class="green" onclick="addAllowedGroup()">🟩 Permitir</button>
-        <button class="red" onclick="addBlockedGroup()">🟥 Bloquear</button>
-      </div>
+    <div style="margin-top: 10px;">
+      <button class="green" onclick="addAllowedGroup()">🟩 Permitir</button>
+      <button class="red" onclick="addBlockedGroup()">🟥 Bloquear</button>
+    </div>
+  </div>
+
+  <hr style="margin:20px 0; border-color:#334155;">
+
+  <!-- DUAS LISTAS ORGANIZADAS -->
+  <div style="display:flex; gap:20px;">
+    
+    <!-- LISTA DE PERMITIDOS -->
+    <div style="flex:1;">
+      <h4>🟩 Grupos Permitidos</h4>
+
+      <!-- Aqui aparecerão automaticamente os grupos permitidos -->
+      <ul id="allowedList"
+          style="background:#0b1320; padding:10px; border-radius:8px; min-height:120px;">
+      </ul>
     </div>
 
-    <hr style="margin:20px 0; border-color:#334155;">
+    <!-- LISTA DE BLOQUEADOS -->
+    <div style="flex:1;">
+      <h4>🟥 Grupos Bloqueados</h4>
 
-    <div style="display:flex; gap:20px;">
-      <div style="flex:1;">
-        <h4>🟩 Grupos Permitidos</h4>
-        <ul id="allowedList"></ul>
-      </div>
-
-      <div style="flex:1;">
-        <h4>🟥 Grupos Bloqueados</h4>
-        <ul id="blockedList"></ul>
-      </div>
+      <!-- Aqui aparecerão automaticamente os grupos bloqueados -->
+      <ul id="blockedList"
+          style="background:#0b1320; padding:10px; border-radius:8px; min-height:120px;">
+      </ul>
     </div>
+
+  </div>
 </div>
+
 
 <!-- LOGS -->
 <div class="card">
